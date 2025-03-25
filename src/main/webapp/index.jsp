@@ -1,13 +1,16 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<!DOCTYPE html>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<%@ page contentType="text/html; charset=UTF-8" %>
 <html>
 <head>
-    <title>JSP - Hello World</title>
+    <title>Welcome to Feedback App</title>
 </head>
 <body>
-<h1><%= "Hello World!" %>
-</h1>
-<br/>
-<a href="hello-servlet">Hello Servlet</a>
+<h1>Welcome to the Feedback Application</h1>
+
+<p>This application allows you to leave feedback by entering your name, a rating, and a short comment.</p>
+
+<p>Your input will be analyzed and a personalized summary will be generated.</p>
+
+<p><a href="feedback">👉 Click here to leave your feedback</a></p>
 </body>
 </html>
