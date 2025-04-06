@@ -14,8 +14,8 @@ public class FeedbackService {
             default -> "Poor";
         };
 
-        return "Thank you, " + feedback.getName() + "! "
-                + "Your feedback was rated as: " + level + ". "
-                + "Comment: \"" + feedback.getComment() + "\"" + "date: " + feedback.getDate();
+        return "Thank you, " + feedback.getName() +
+                ", for your feedback! You rated us as '" + level +
+                "'. Contact permission: " + (feedback.isAllowContact() ? "Yes" : "No") + ".";
     }
 }

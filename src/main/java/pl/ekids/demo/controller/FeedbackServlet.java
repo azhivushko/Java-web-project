@@ -1,5 +1,7 @@
 package pl.ekids.demo.controller;
 
+import pl.ekids.demo.dao.DaoFactory;
+import pl.ekids.demo.dao.FeedbackDao;
 import pl.ekids.demo.model.Feedback;
 import pl.ekids.demo.service.FeedbackService;
 
@@ -7,33 +9,38 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 
 @WebServlet("/feedback")
 public class FeedbackServlet extends HttpServlet {
     private final FeedbackService service = new FeedbackService();
+    private final FeedbackDao dao = DaoFactory.getDao(DaoFactory.DaoType.POSTGRES);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Just show the form on GET
-        request.getRequestDispatcher("/form.jsp").forward(request, response);
+        //?list=true -> showAll = true
+        String showAll = request.getParameter("list");
+        if ("true".equals(showAll)) {
+            request.setAttribute("feedbackList", dao.findAll());
+            request.getRequestDispatcher("/feedback-list.jsp").forward(request, response);
+        } else {
+            request.getRequestDispatcher("/form.jsp").forward(request, response);
+        }
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Get form data from request
         String name = request.getParameter("name");
+        String email = request.getParameter("email");
         String ratingStr = request.getParameter("rating");
         String comment = request.getParameter("comment");
-        String date = request.getParameter("date");
+        boolean allowContact = request.getParameter("allowContact") != null;
 
-        // Basic validation
-        if (name == null || name.isBlank() ||
-                comment == null || comment.isBlank() ||
-                ratingStr == null || date == null || date.isBlank() || !ratingStr.matches("\\d+")) {
-
-            request.setAttribute("error", "Все поля обязательны для заполнения, рейтинг должен быть числом, дата должны быть датой.");
+        if (name == null || name.isBlank() || email == null || email.isBlank()
+                || ratingStr == null || !ratingStr.matches("\\d+") || comment == null || comment.isBlank()) {
+            request.setAttribute("error", "All fields are required and rating must be numeric.");
             request.getRequestDispatcher("/form.jsp").forward(request, response);
             return;
         }
@@ -45,17 +52,20 @@ public class FeedbackServlet extends HttpServlet {
             return;
         }
 
-        // Create feedback object
-        Feedback feedback = new Feedback(name.trim(), rating, comment.trim(), date.trim());
+        // Create Feedback object
+        Feedback feedback = new Feedback(name.trim(), email.trim(), rating, comment.trim(), allowContact);
+        dao.save(feedback);
 
-        // Process through service
+        // Format LocalDateTime for JSP display
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMMM dd, yyyy HH:mm");
+        String formattedDate = feedback.getSubmittedAt().format(formatter);
+        request.setAttribute("formattedDate", formattedDate);
+
+        // Process message
         String summary = service.createSummary(feedback);
-
-        // Add result to request + session
-        // строка
         request.setAttribute("summary", summary);
+
         HttpSession session = request.getSession();
-        // объект
         session.setAttribute("lastFeedback", feedback);
 
         request.getRequestDispatcher("/result.jsp").forward(request, response);

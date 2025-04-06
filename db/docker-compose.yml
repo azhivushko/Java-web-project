@@ -1,0 +1,21 @@
+version: "2.4"
+
+services:
+  feedback-db:
+    image: postgres:16
+    container_name: db
+    restart: always
+    mem_limit: 1g
+    mem_reservation: 64m
+    cpus: 1
+    environment:
+      - POSTGRES_DB=feedback
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./dbdata:/var/lib/postgresql/data
+    command:
+      -c log_line_prefix='%t:%r:%u@%d:[%p]:' -c log_min_messages='warning' -c log_min_error_statement='error'
+      -c log_connections='off' -c log_checkpoints='off' -c log_disconnections='off' -c log_hostname='on' -c log_statement='ddl'
